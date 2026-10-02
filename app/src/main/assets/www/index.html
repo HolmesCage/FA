@@ -1,0 +1,87 @@
+<!DOCTYPE html><html><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no">
+<style>
+html,body{margin:0;height:100%;background:#000;overflow:hidden;font-family:Arial,sans-serif;color:#fff}
+#stage{position:fixed;left:0;top:0;width:1366px;height:768px;transform-origin:0 0}
+.scr{position:absolute;inset:0;display:none}.scr.on{display:block}
+#boot{background:#000}#cube{position:absolute;left:592px;top:250px;width:182px;height:260px}
+#home,#games{background:#000}
+h1{position:absolute;left:60px;top:40px;margin:0;font-weight:300;font-size:34px}
+.hint{position:absolute;bottom:30px;left:0;right:0;text-align:center;color:#aab;font-size:20px}
+#bar{position:absolute;left:0;right:0;top:300px;display:flex;justify-content:center;gap:40px}
+.old{width:230px;height:200px;border-radius:14px;background:linear-gradient(#3a3d66,#1c1e38);border:3px solid #556;
+ display:flex;flex-direction:column;align-items:center;justify-content:center;font-size:30px;transition:.15s}
+.ico b{font-size:80px;font-weight:400}.ico.f,.tile.f{transform:scale(1.15);border-color:#c8c8ff;box-shadow:0 0 30px #8a8aff}
+#hg{position:absolute;left:0;right:0;top:150px;display:grid;grid-template-columns:repeat(5,238px);grid-auto-rows:215px;gap:24px 16px;justify-content:center}
+.hi{position:relative;width:238px;height:215px;background:url(img/0721.png) 0 0/238px 215px no-repeat;opacity:.92}
+.hi img{position:absolute;left:42px;top:14px;width:154px;height:127px}
+.hi span{position:absolute;left:0;right:0;top:152px;height:40px;line-height:40px;text-align:center;font-size:24px;letter-spacing:.5px}
+.hi.f{background-image:url(img/0722.png);opacity:1}
+#desc{position:absolute;left:0;right:0;bottom:80px;display:flex;justify-content:center;align-items:center;gap:16px;font-size:26px}
+#desc img{width:70px}
+#foot{position:absolute;left:0;right:0;bottom:22px;display:flex;justify-content:center;gap:50px;font-size:22px;color:#ddd}
+.dot{display:inline-block;width:34px;height:14px;margin-right:8px;vertical-align:middle}
+#grid{position:absolute;left:0;right:0;top:190px;display:grid;grid-template-columns:repeat(4,201px);grid-auto-rows:216px;gap:30px 40px;justify-content:center}
+.tile{position:relative;width:201px;height:216px;text-align:center}
+.tile img{position:absolute;left:0;top:0;width:201px;height:176px}
+.tile div{position:absolute;left:0;right:0;top:180px;height:32px;line-height:32px;font-size:22px;white-space:nowrap}
+.tile.f div{color:#c8c8ff}
+#play{position:fixed;left:0;top:0;width:100vw;height:100vh;background:#000}#play ruffle-player{width:100%;height:100%}
+</style></head><body>
+<div id="stage">
+ <div id="boot" class="scr on"><img id="cube" src="img/2072.png"></div>
+ <div id="home" class="scr"><div id="hg"></div><div id="desc"><img src="img/0725.png"><span id="dt"></span></div>
+  <div id="foot"><span><i class="dot" style="background:#e22"></i>Müşteri Desteği</span><span><i class="dot" style="background:#2c4"></i>Basit Kılavuz</span><span>⟲ Çıkış</span></div></div>
+ <div id="games" class="scr"><h1>Oyun</h1><div id="grid"></div>
+  <div class="hint">Yön tuşları: seç &nbsp; OK: oyna &nbsp; GERİ: dön</div></div>
+</div>
+<div id="play" class="scr"></div>
+<script src="ruffle/ruffle.js"></script>
+<script>
+window.RufflePlayer=window.RufflePlayer||{};
+window.RufflePlayer.config={publicPath:"ruffle/",autoplay:"on",unmuteOverlay:"hidden",splashScreen:false,letterbox:"on",warnOnUnsupportedContent:false,contextMenu:"off"};
+// >>> Edit names / order here. a,b = normal and focused thumbnail
+const GAMES=[
+ {n:"Whack-a-Mole",f:"game_1.swf",a:"5196",b:"5199"},
+ {n:"Sudoku",f:"game_2.swf",a:"5200",b:"5203"},
+ {n:"Hole in One",f:"game_3.swf",a:"5192",b:"5195"},
+ {n:"Jump",f:"game_4.swf",a:"5208",b:"5211"},
+ {n:"Cooking Burgers",f:"game_9.swf",a:"5228",b:"5231"},
+ {n:"Saving Crystal",f:"game_11.swf",a:"5236",b:"5239"},
+ {n:"Invader",f:"game_12.swf",a:"5240",b:"5243"},
+ {n:"Urgent Survival",f:"game_13.swf",a:"5244",b:"5247"}];
+const $=id=>document.getElementById(id);let scr="boot",sel=0,player=null;
+function fit(){const vv=window.visualViewport,w=Math.round((vv&&vv.width)||innerWidth||document.documentElement.clientWidth),h=Math.round((vv&&vv.height)||innerHeight||document.documentElement.clientHeight);
+ if(!w||!h)return;const sc=Math.min(w/1366,h/768);
+ $("stage").style.transform=`translate(${(w-1366*sc)/2}px,${(h-768*sc)/2}px) scale(${sc})`}
+addEventListener("resize",fit);addEventListener("load",fit);addEventListener("orientationchange",fit);
+if(window.visualViewport)visualViewport.addEventListener("resize",fit);
+fit();let n=0;const ft=setInterval(()=>{fit();if(++n>20)clearInterval(ft)},250);
+function show(n){scr=n;document.querySelectorAll(".scr").forEach(e=>e.classList.toggle("on",e.id==n))}
+// boot: LG cube animation then fade to Home
+let fr=0;const t=setInterval(()=>{fr++;$("cube").src="img/"+(2072+(fr%10))+".png";if(fr>=30)endBoot()},110);
+function endBoot(){clearInterval(t);if(scr!="boot")return;$("boot").style.transition="opacity .8s";$("boot").style.opacity=0;setTimeout(()=>show("home"),800)}
+// home menu (Turkish, like the LE5500)
+const HOME=[["Kurulum","0697","0698","Kurulum ayarlarını yapmak için OK (◉) tuşuna basın."],["Resim","0699","0700","Resim ayarlarını yapmak için OK (◉) tuşuna basın."],["Ses","0701","0702","Ses ayarlarını yapmak için OK (◉) tuşuna basın."],["Zaman","0703","0704","Saat ayarlarını yapmak için OK (◉) tuşuna basın."],["Kilit","0705","0706","Kilit ayarlarını yapmak için OK (◉) tuşuna basın."],
+["Seçenek","0707","0708","Seçenek ayarlarını yapmak için OK (◉) tuşuna basın."],["Ağ","0709","0710","Ağ ayarlarını yapmak için OK (◉) tuşuna basın."],["Bluetooth","0711","0712","Bluetooth ayarlarını yapmak için OK (◉) tuşuna basın."],["Medyam","0715","0716","Fotoğraf, müzik ve videolar için OK (◉) tuşuna basın."],["Oyun","0719","0720","Oyun oynamak için OK (◉) tuşuna basın."]];
+let hs=9;
+HOME.forEach((h,i)=>{const d=document.createElement("div");d.className="hi";const r=i<5?0:1,c=i%5;
+ d.innerHTML=`<img src="img/${h[1]}.png"><span>${h[0].toUpperCase()}</span>`;$("hg").appendChild(d);h.el=d});
+function hfocus(){HOME.forEach((h,i)=>{h.el.classList.toggle("f",i==hs);h.el.querySelector("img").src="img/"+(i==hs?h[2]:h[1])+".png"});$("dt").textContent=HOME[hs][3]}hfocus();
+// games grid
+GAMES.forEach(g=>{const d=document.createElement("div");d.className="tile";
+ d.innerHTML=`<img src="img/${g.a}.png"><div>${g.n}</div>`;$("grid").appendChild(d);g.el=d;
+ const im=d.querySelector("img");g.upd=x=>im.src="img/"+(x?g.b:g.a)+".png"});
+function focus(){GAMES.forEach((g,i)=>{g.el.classList.toggle("f",i==sel);g.upd&&g.upd(i==sel)})}focus();
+function launch(g){show("play");const r=window.RufflePlayer.newest().createPlayer();r.style.width="100%";r.style.height="100%";
+ $("play").innerHTML="";$("play").appendChild(r);r.load({url:"games/"+g.f});player=r;setTimeout(()=>r.focus(),300)}
+function stop(){if(player){player.remove();player=null}$("play").innerHTML="";show("games")}
+window.onRemoteBack=()=>{if(scr=="play")stop();else if(scr=="games")show("home");return scr!="home"&&scr!="boot"};
+addEventListener("keydown",e=>{const k=e.key;
+ if(scr=="boot"){endBoot();return}
+ if(scr=="play"){if(k=="Escape"||k=="BrowserBack"||k=="GoBack"){stop();e.preventDefault()}return}
+ if(scr=="home"){if(k=="ArrowRight")hs=Math.min(hs+1,9);if(k=="ArrowLeft")hs=Math.max(hs-1,0);if(k=="ArrowDown")hs=Math.min(hs+5,9);if(k=="ArrowUp")hs=Math.max(hs-5,0);if(k=="Enter"&&hs==9)show("games");hfocus();e.preventDefault();return}
+ if(k=="Escape"||k=="Backspace"||k=="BrowserBack"){show("home");return}
+ const c=4;if(k=="ArrowRight")sel=Math.min(sel+1,GAMES.length-1);if(k=="ArrowLeft")sel=Math.max(sel-1,0);
+ if(k=="ArrowDown")sel=Math.min(sel+c,GAMES.length-1);if(k=="ArrowUp")sel=Math.max(sel-c,0);
+ if(k=="Enter")launch(GAMES[sel]);focus();e.preventDefault()});
+</script></body></html>
